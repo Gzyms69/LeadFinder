@@ -3,6 +3,9 @@
 ## 1. Project Vision & Core Objective
 Automated Google Maps lead generation tool focusing on "New & Website-less" businesses.
 
+- **GitHub Repository:** https://github.com/Gzyms69/LeadFinder
+- **Target Spreadsheet:** https://docs.google.com/spreadsheets/d/14oNkRSDRvLw_p0qKSnC_rXPLlsZTDYJCW9R-Vnro6cY/edit
+
 ### Primary Filters
 - **No Website:** `website` field is null or empty.
 - **Newness Proxy:** `review_count` is below a user-defined threshold (default <= 5).
@@ -20,12 +23,26 @@ Automated Google Maps lead generation tool focusing on "New & Website-less" busi
 - `processed_data/`: Cleaned CSVs ready for upload.
 - `docs/`: Supplemental documentation.
 
-## 4. Current State (PHASE 0)
+## 4. Current State
 - [x] Project directory initialized.
 - [x] Git repository initialized.
-- [->] Scaffolding documentation files.
+- [x] Scraper Integration (Docker + Poland localization).
+- [x] Filtering Logic (No Website + Max Reviews + City extraction).
+- [x] Google Sheets Integration (Table formatting + Auto-filters).
+- [x] JSON-driven Configuration.
 
-## 5. Known Issues & Risks
+## 5. Usage
+1. Edit `config/query.json` to set your search term and filters.
+2. Run the tool:
+   ```bash
+   python3 src/main.py
+   ```
+3. (Optional) Override with CLI:
+   ```bash
+   python3 src/main.py --query "nowa kawiarnia Warszawa" --max-reviews 5
+   ```
+
+## 6. Known Issues & Risks
 - **Scraper Dependency:** Relies on `gosom/google-maps-scraper` maintained status.
 - **Rate Limiting:** Google Maps anti-bot measures require cautious usage.
 - **Data Privacy:** Tool is intended for low-volume, personal lead generation.
