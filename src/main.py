@@ -33,7 +33,7 @@ def run_scrape_geo(keyword, lat, lon, radius, output_raw, lang="pl", depth=1, em
     cmd = [
         "docker", "run", "--rm",
         "-v", f"{os.getcwd()}/raw_data:/data",
-        "gosom/google-maps-scraper",
+        "ghcr.io/gzyms69/google-maps-scraper:latest",
         "-input", "/data/queries.txt",
         "-results", f"/data/{os.path.basename(output_raw)}",
         "-lang", lang,

@@ -45,3 +45,17 @@ Google Maps limits the number of results returned for a single query. Comprehens
 - src/: Contains core Python logic and orchestration scripts.
 - raw_data/: Archive of unprocessed scraper outputs.
 - processed_data/: Filtered leads optimized for outreach.
+
+## Spreadsheet Column Definitions
+The synchronized Google Sheet is structured with the following columns:
+
+- Column A (Business Name): The formal name of the entity as listed on Google Maps.
+- Column B (City): The municipality identified from the business address.
+- Column C (Address): The full physical location of the business.
+- Column D (Contact Profile): A consolidated field containing verified phone numbers, email addresses, and social media links (Facebook, Instagram, LinkedIn).
+- Column E (Domain .PL): Indicates the availability of a .pl domain matching the business name (Available, Registered, or N/A).
+- Column F (Domain .COM): Indicates the availability of a .com domain matching the business name (Available, Registered, or N/A).
+- Column G (Digital Score): A numeric ranking (0-3) representing the business's online presence. A score of 0 identifies a "Ghost" lead with no detectable digital footprint.
+- Column H (Reviews): The total count of user reviews on Google Maps.
+- Column I (Rating): The average star rating of the business.
+- Column J (Maps URL): A direct link to the business profile on Google Maps.

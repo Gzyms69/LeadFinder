@@ -4,7 +4,7 @@
 
 PROJECT_DIR="/home/gzyms/Dev Projects/LeadFinder"
 VENV_PATH="$PROJECT_DIR/venv"
-SCRAPER_IMAGE="gosom/google-maps-scraper"
+SCRAPER_IMAGE="ghcr.io/gzyms69/google-maps-scraper:latest"
 
 function start_pipeline() {
     echo "--- [STARTING LEADFINDER] ---"
