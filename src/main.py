@@ -95,6 +95,15 @@ def main():
                 email=conf.get("email_scrape", False)
             )
 
+            # Tag the raw data with the keyword that found it
+            if os.path.exists(output_file):
+                try:
+                    df_raw = pd.read_csv(output_file)
+                    df_raw['search_keyword'] = kw
+                    df_raw.to_csv(output_file, index=False)
+                except Exception as e:
+                    print(f"Warning: Could not tag {output_file} with keyword: {e}")
+
     # 2. Merge Raw Data
     # Since we ran multiple scrapes (one per keyword), we need to merge them for filtering
     all_files = glob.glob(f"{RAW_DIR}/raw_*.csv")

@@ -5,6 +5,9 @@ import json
 import whois
 import time
 import re
+# Add src to path so we can import template_matcher
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from template_matcher import get_best_template
 
 def clean_name_for_domain(name):
     """
@@ -154,12 +157,15 @@ def filter_leads(input_files, output_file, max_reviews=5):
     leads['Digital Score'] = leads.apply(calculate_digital_score, axis=1)
     leads['Contact Profile'] = leads.apply(build_contact_profile, axis=1)
 
-    # 4. Domain Check (.PL and .COM)
-    print(f"--- Checking domain availability for {len(leads)} leads ---")
+    # 4. Domain Check (.PL and .COM) & Template Matching
+    print(f"--- Checking domain availability and matching templates for {len(leads)} leads ---")
     domain_pl = []
     domain_com = []
+    template_slugs = []
+    magic_links = []
     
     for idx, row in leads.iterrows():
+        # Domain Check
         base_name = clean_name_for_domain(row['title'])
         if base_name:
             print(f"  > Checking: {base_name}.pl/.com")
@@ -170,9 +176,18 @@ def filter_leads(input_files, output_file, max_reviews=5):
         else:
             domain_pl.append("N/A")
             domain_com.append("N/A")
+            
+        # Template Matching
+        # Prioritize the keyword used for search, with business name as secondary context
+        search_kw = row.get('search_keyword', '')
+        slug, link = get_best_template(row['title'], row['City'], row['Phone'], search_keyword=search_kw)
+        template_slugs.append(slug)
+        magic_links.append(link)
 
     leads['Domain .PL'] = domain_pl
     leads['Domain .COM'] = domain_com
+    leads['Template Slug'] = template_slugs
+    leads['Magic Link'] = magic_links
 
     # 5. Sort: By Digital Score (Ghosts first), then Reviews
     leads = leads.sort_values(by=['Digital Score', 'review_count'], ascending=[True, True])
@@ -185,6 +200,8 @@ def filter_leads(input_files, output_file, max_reviews=5):
         'Contact Profile': 'Contact Profile',
         'Domain .PL': 'Domain .PL',
         'Domain .COM': 'Domain .COM',
+        'Template Slug': 'Template Slug',
+        'Magic Link': 'Magic Link',
         'Digital Score': 'Digital Score',
         'review_count': 'Reviews',
         'review_rating': 'Rating',

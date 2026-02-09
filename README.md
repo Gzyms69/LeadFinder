@@ -1,6 +1,6 @@
 # LeadFinder: Google Maps Lead Generator
 
-Automated tool to identify businesses with a digital gap on Google Maps and synchronize results directly to Google Sheets.
+Automated tool to identify businesses with a digital gap on Google Maps and synchronize results directly to Google Sheets with personalized demo links.
 
 ## Quick Start
 1. Configure: Edit config/query.json with search terms and filters.
@@ -11,51 +11,52 @@ Automated tool to identify businesses with a digital gap on Google Maps and sync
 - Automated Filtering: Excludes businesses that already possess a website.
 - Newness Proxy: Filters by review count to identify recently established businesses.
 - City Extraction: Automatically identifies the municipality for targeted outreach.
-- Domain Availability Check: Automatically verifies if .pl and .com domains matching the business name are available for registration.
-- Digital Score: Ranks leads based on their online presence. A score of 0 indicates a high-priority lead with no digital footprint.
-- Consolidated Contact Profiles: Merges phone numbers, email addresses, and social media links into a single profile.
+- Domain Availability Check: Verifies if .pl and .com domains matching the business name are available.
+- Template Matching: Automatically categorizes businesses into industry-specific website templates using keyword analysis of search terms and business names.
+- Magic Link Generation: Creates personalized URLs for prospective clients, allowing for instant generation of custom demo websites.
+- Digital Score: Ranks leads based on their online presence (0-3 scale).
+- Consolidated Contact Profiles: Merges phone numbers, email addresses, and social media links.
 - Geolocation Search: Performs targeted searches within a specified radius of decimal coordinates.
-- Table Synchronization: Appends data to Google Sheets with automated table formatting, frozen headers, and active filters.
+- Table Synchronization: Appends data to Google Sheets with automated table formatting and active filters.
 
 ## Configuration (config/query.json)
-The application is controlled via a JSON configuration file.
+- mode: "geo" for radius searches or "text" for direct queries.
+- lat, lon: Decimal coordinates for the search center.
+- radius: Search radius in meters.
+- keywords: Array of search terms.
+- depth: Result pagination depth.
+- email_scrape: Enable/disable website contact crawling.
 
-- mode: "geo" for coordinate-based radius searches or "text" for standard keyword queries.
-- lat, lon: Decimal coordinates for the geographic center of the search.
-- radius: Search radius measured in meters.
-- keywords: An array of terms to be searched within the specified parameters.
-- depth: Controls the scroll depth of the search results. Higher values yield more results but increase execution time.
-- email_scrape: Boolean value to enable crawling discovered websites for contact information.
+## Dynamic Sales Architecture Integration
+The tool integrates with the Katalog Marketplace to generate personalized demo links.
 
-## Strategy: Regional Lead Generation
-Google Maps limits the number of results returned for a single query. Comprehensive data collection requires a granular approach.
+### Matching Logic
+The system prioritizes the search keyword to determine the industry category (e.g., searching for "mechanik" automatically assigns the "warsztat-pro" template). If the keyword is generic, it analyzes the business name against a comprehensive registry of Polish and English industry terms.
 
-1. Use Geo Mode: Define a central point and a significant radius to allow the tool to grid the region.
-2. Target Administrative Divisions: Use specific voivodeships or counties in your keywords to circumvent result limits.
-3. Iterative Filtering: Use the --skip-scrape flag to adjust filtering thresholds on existing datasets without re-executing the scraping phase.
-
-## Technical Limitations and Safety
-- Pagination Constraints: Google Maps typically caps results at 200-400 items per specific query.
-- Anti-Automation Measures: To prevent IP restrictions, avoid high-frequency execution. For large-scale operations, consider integrating a proxy rotation service.
-- Domain Check Latency: Verifying domain availability introduces a deliberate delay to comply with WHOIS server rate limits.
-- Compliance: This software is intended for internal lead generation purposes. Use in accordance with local regulations and terms of service.
-
-## Project Structure
-- config/: Contains API credentials and search parameters.
-- src/: Contains core Python logic and orchestration scripts.
-- raw_data/: Archive of unprocessed scraper outputs.
-- processed_data/: Filtered leads optimized for outreach.
+### Supported Templates
+- warsztat-pro: Automotive services, detailing, and repair.
+- bistro-modern: Restaurants, cafes, and gastronomy.
+- helios-advise: Legal, financial, and consulting services.
+- cyber-security: IT services, computer repair, and security.
+- landing-aplikacji: Software and mobile applications.
+- portfolio-osobista: Freelancers, artists, and personal brands.
 
 ## Spreadsheet Column Definitions
-The synchronized Google Sheet is structured with the following columns:
+- Column A (Business Name): Name as listed on Google Maps.
+- Column B (City): Identified municipality.
+- Column C (Address): Physical location.
+- Column D (Contact Profile): Consolidated phone, email, and social links.
+- Column E (Domain .PL): Availability of matching .pl domain.
+- Column F (Domain .COM): Availability of matching .com domain.
+- Column G (Template Slug): Assigned industry template identifier.
+- Column H (Magic Link): Personalized demo website URL.
+- Column I (Digital Score): Online presence ranking.
+- Column J (Reviews): Total user review count (Patched for accuracy).
+- Column K (Rating): Average star rating.
+- Column L (Maps URL): Direct link to the business profile.
 
-- Column A (Business Name): The formal name of the entity as listed on Google Maps.
-- Column B (City): The municipality identified from the business address.
-- Column C (Address): The full physical location of the business.
-- Column D (Contact Profile): A consolidated field containing verified phone numbers, email addresses, and social media links (Facebook, Instagram, LinkedIn).
-- Column E (Domain .PL): Indicates the availability of a .pl domain matching the business name (Available, Registered, or N/A).
-- Column F (Domain .COM): Indicates the availability of a .com domain matching the business name (Available, Registered, or N/A).
-- Column G (Digital Score): A numeric ranking (0-3) representing the business's online presence. A score of 0 identifies a "Ghost" lead with no detectable digital footprint.
-- Column H (Reviews): The total count of user reviews on Google Maps.
-- Column I (Rating): The average star rating of the business.
-- Column J (Maps URL): A direct link to the business profile on Google Maps.
+## Project Structure
+- config/: API credentials and search parameters.
+- src/: Core Python logic and template matching engine.
+- raw_data/: Archive of scraper outputs.
+- processed_data/: Filtered leads ready for outreach.
