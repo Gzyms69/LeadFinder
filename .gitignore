@@ -1,0 +1,18 @@
+# Data & Logs
+raw_data/
+processed_data/
+*.log
+
+# Credentials
+config/*.json
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# System
+.DS_Store
