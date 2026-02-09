@@ -43,7 +43,7 @@ def upload_to_sheets(csv_file, credentials_file, spreadsheet_id):
             
             # Table Formatting: Freeze top row and make bold
             worksheet.freeze(rows=1)
-            worksheet.format("A1:G1", {
+            worksheet.format("A1:H1", {
                 "textFormat": {"bold": True},
                 "backgroundColor": {"red": 0.9, "green": 0.9, "blue": 0.9}
             })

@@ -10,26 +10,81 @@ def extract_city(address_json):
     try:
         if pd.isna(address_json) or not address_json:
             return ""
-        # The scraper sometimes returns a string that looks like JSON
         data = json.loads(address_json.replace("''", "'"))
         return data.get('city', '')
     except:
         return ""
 
-def filter_leads(input_file, output_file, max_reviews=5):
+def calculate_digital_score(row):
     """
-    Filters Google Maps leads for those without websites and low review counts.
+    Calculates a 'Digital Presence Score' (0-3).
+    0 = Ghost (No phone, no web, no social)
+    1 = Minimal (Phone only)
+    2 = Partial (Socials but no Web)
+    3 = Established (Website)
     """
-    if not os.path.exists(input_file):
-        print(f"Error: Input file {input_file} not found.")
+    score = 0
+    if row.get('Phone') and str(row.get('Phone')).strip():
+        score += 1
+    # Check for social media presence (if columns exist)
+    socials = ['facebook', 'instagram', 'linkedin', 'twitter']
+    has_social = False
+    for s in socials:
+        if s in row and pd.notna(row[s]) and str(row[s]).strip():
+            has_social = True
+            break
+    if has_social:
+        score += 1
+    
+    if row.get('website') and pd.notna(row['website']) and str(row['website']).strip():
+        score += 1
+        
+    return score
+
+def build_contact_profile(row):
+    """
+    Consolidates all contact info into a single readable string.
+    """
+    parts = []
+    if row.get('Phone') and pd.notna(row['Phone']):
+        parts.append(f"📞 {row['Phone']}")
+    
+    if row.get('emails') and pd.notna(row['emails']):
+        parts.append(f"📧 {row['emails']}")
+
+    socials = ['facebook', 'instagram', 'linkedin']
+    for s in socials:
+        if s in row and pd.notna(row[s]) and str(row[s]).strip():
+            parts.append(f"🔗 {s.title()}: {row[s]}")
+            
+    return " | ".join(parts)
+
+def filter_leads(input_files, output_file, max_reviews=5):
+    """
+    Filters leads from multiple CSVs.
+    """
+    if isinstance(input_files, str):
+        input_files = [input_files]
+
+    dfs = []
+    for f in input_files:
+        try:
+            dfs.append(pd.read_csv(f))
+        except Exception as e:
+            print(f"Error reading {f}: {e}")
+
+    if not dfs:
+        print("No data loaded.")
         return
 
-    # Load the data
-    try:
-        df = pd.read_csv(input_file)
-    except Exception as e:
-        print(f"Error reading CSV: {e}")
-        return
+    df = pd.concat(dfs, ignore_index=True)
+    
+    # 0. Clean & Standardize
+    # Check for 'status' column to filter closed businesses
+    if 'status' in df.columns:
+        # We only want to REMOVE permanently closed businesses.
+        # We KEEP Operational, Temporarily Closed, and NaN (unknown).
+        df = df[~df['status'].astype(str).str.lower().isin(['permanently_closed', 'permanently closed'])]
 
     # 1. Filter: No Website (NaN or empty string)
     leads = df[df['website'].isna() | (df['website'].str.strip() == '')].copy()
@@ -38,18 +93,28 @@ def filter_leads(input_file, output_file, max_reviews=5):
     leads['review_count'] = pd.to_numeric(leads['review_count'], errors='coerce').fillna(0)
     leads = leads[leads['review_count'] <= max_reviews]
 
-    # 3. Extra: Extract City from complete_address
+    # 3. Enrich Data
     leads['City'] = leads['complete_address'].apply(extract_city)
+    leads['Phone'] = leads['phone'] # Rename for helper function
+    
+    # Ensure social columns exist even if scraper didn't find any
+    for col in ['facebook', 'instagram', 'linkedin', 'emails']:
+        if col not in leads.columns:
+            leads[col] = None
 
-    # 4. Sort: By review count ascending
-    leads = leads.sort_values(by='review_count', ascending=True)
+    leads['Digital Score'] = leads.apply(calculate_digital_score, axis=1)
+    leads['Contact Profile'] = leads.apply(build_contact_profile, axis=1)
 
-    # 5. Cleanup: Select and rename columns for clarity
+    # 4. Sort: By Digital Score (Ghosts first), then Reviews (Newest first)
+    leads = leads.sort_values(by=['Digital Score', 'review_count'], ascending=[True, True])
+
+    # 5. Cleanup
     columns_to_keep = {
         'title': 'Business Name',
         'City': 'City',
         'address': 'Address',
-        'phone': 'Phone',
+        'Contact Profile': 'Contact Profile',
+        'Digital Score': 'Digital Score',
         'review_count': 'Reviews',
         'review_rating': 'Rating',
         'link': 'Maps URL'
@@ -66,15 +131,6 @@ def filter_leads(input_file, output_file, max_reviews=5):
     print(f"Output saved to: {output_file}")
 
 if __name__ == "__main__":
-    # Default values
-    INPUT = 'raw_data/test_poland.csv'
-    OUTPUT = 'processed_data/filtered_leads.csv'
-    THRESHOLD = 5
-    
-    # Allow command line overrides
+    # Test mode
     if len(sys.argv) > 1:
-        INPUT = sys.argv[1]
-    if len(sys.argv) > 2:
-        THRESHOLD = int(sys.argv[2])
-    
-    filter_leads(INPUT, OUTPUT, THRESHOLD)
+        filter_leads([sys.argv[1]], 'processed_data/test_filtered.csv')
