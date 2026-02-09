@@ -2,6 +2,55 @@ import pandas as pd
 import os
 import sys
 import json
+import whois
+import time
+import re
+
+def clean_name_for_domain(name):
+    """
+    Cleans business name for domain checking:
+    - Lowers case
+    - Converts Polish characters to ASCII
+    - Removes all non-alphanumeric characters
+    """
+    if not name or pd.isna(name):
+        return ""
+    
+    # Lowercase
+    name = name.lower()
+    
+    # Polish character mapping
+    replacements = {
+        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
+        'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z'
+    }
+    for char, replacement in replacements.items():
+        name = name.replace(char, replacement)
+    
+    # Remove everything except a-z and 0-9
+    name = re.sub(r'[^a-z0-9]', '', name)
+    return name
+
+def check_domain_availability(domain):
+    """
+    Checks if a domain is available using WHOIS.
+    Returns 'Available', 'Registered', or 'Error'.
+    """
+    if not domain:
+        return "N/A"
+    try:
+        # Some WHOIS servers are very sensitive. 
+        # We add a small sleep before each check in the main loop if needed.
+        w = whois.whois(domain)
+        # If domain has no expiration date or registrar, it might be available
+        if not w.domain_name:
+            return "Available"
+        return "Registered"
+    except Exception as e:
+        # python-whois raises an exception if domain is not found (which means it's available)
+        if "No match for" in str(e) or "NOT FOUND" in str(e) or "No found" in str(e):
+            return "Available"
+        return "Check Manually"
 
 def extract_city(address_json):
     """
@@ -26,7 +75,7 @@ def calculate_digital_score(row):
     score = 0
     if row.get('Phone') and str(row.get('Phone')).strip():
         score += 1
-    # Check for social media presence (if columns exist)
+    # Check for social media presence
     socials = ['facebook', 'instagram', 'linkedin', 'twitter']
     has_social = False
     for s in socials:
@@ -61,7 +110,7 @@ def build_contact_profile(row):
 
 def filter_leads(input_files, output_file, max_reviews=5):
     """
-    Filters leads from multiple CSVs.
+    Filters leads from multiple CSVs and checks domain availability.
     """
     if isinstance(input_files, str):
         input_files = [input_files]
@@ -79,25 +128,25 @@ def filter_leads(input_files, output_file, max_reviews=5):
 
     df = pd.concat(dfs, ignore_index=True)
     
-    # 0. Clean & Standardize
-    # Check for 'status' column to filter closed businesses
+    # 0. Filter Status
     if 'status' in df.columns:
-        # We only want to REMOVE permanently closed businesses.
-        # We KEEP Operational, Temporarily Closed, and NaN (unknown).
         df = df[~df['status'].astype(str).str.lower().isin(['permanently_closed', 'permanently closed'])]
 
-    # 1. Filter: No Website (NaN or empty string)
+    # 1. Filter: No Website
     leads = df[df['website'].isna() | (df['website'].str.strip() == '')].copy()
 
-    # 2. Filter: Review count <= threshold
+    # 2. Filter: Review count
     leads['review_count'] = pd.to_numeric(leads['review_count'], errors='coerce').fillna(0)
     leads = leads[leads['review_count'] <= max_reviews]
 
+    if leads.empty:
+        print("No leads found matching criteria.")
+        return
+
     # 3. Enrich Data
     leads['City'] = leads['complete_address'].apply(extract_city)
-    leads['Phone'] = leads['phone'] # Rename for helper function
+    leads['Phone'] = leads['phone']
     
-    # Ensure social columns exist even if scraper didn't find any
     for col in ['facebook', 'instagram', 'linkedin', 'emails']:
         if col not in leads.columns:
             leads[col] = None
@@ -105,15 +154,37 @@ def filter_leads(input_files, output_file, max_reviews=5):
     leads['Digital Score'] = leads.apply(calculate_digital_score, axis=1)
     leads['Contact Profile'] = leads.apply(build_contact_profile, axis=1)
 
-    # 4. Sort: By Digital Score (Ghosts first), then Reviews (Newest first)
+    # 4. Domain Check (.PL and .COM)
+    print(f"--- Checking domain availability for {len(leads)} leads ---")
+    domain_pl = []
+    domain_com = []
+    
+    for idx, row in leads.iterrows():
+        base_name = clean_name_for_domain(row['title'])
+        if base_name:
+            print(f"  > Checking: {base_name}.pl/.com")
+            domain_pl.append(check_domain_availability(f"{base_name}.pl"))
+            time.sleep(0.5) # Anti-block delay
+            domain_com.append(check_domain_availability(f"{base_name}.com"))
+            time.sleep(0.5)
+        else:
+            domain_pl.append("N/A")
+            domain_com.append("N/A")
+
+    leads['Domain .PL'] = domain_pl
+    leads['Domain .COM'] = domain_com
+
+    # 5. Sort: By Digital Score (Ghosts first), then Reviews
     leads = leads.sort_values(by=['Digital Score', 'review_count'], ascending=[True, True])
 
-    # 5. Cleanup
+    # 6. Cleanup
     columns_to_keep = {
         'title': 'Business Name',
         'City': 'City',
         'address': 'Address',
         'Contact Profile': 'Contact Profile',
+        'Domain .PL': 'Domain .PL',
+        'Domain .COM': 'Domain .COM',
         'Digital Score': 'Digital Score',
         'review_count': 'Reviews',
         'review_rating': 'Rating',
@@ -123,14 +194,9 @@ def filter_leads(input_files, output_file, max_reviews=5):
     existing_cols = [col for col in columns_to_keep.keys() if col in leads.columns]
     final_leads = leads[existing_cols].rename(columns=columns_to_keep)
 
-    # Save to processed_data
+    # Save
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     final_leads.to_csv(output_file, index=False)
     
-    print(f"Filtering complete. {len(final_leads)} leads found.")
+    print(f"Filtering & Domain Checks complete. {len(final_leads)} leads found.")
     print(f"Output saved to: {output_file}")
-
-if __name__ == "__main__":
-    # Test mode
-    if len(sys.argv) > 1:
-        filter_leads([sys.argv[1]], 'processed_data/test_filtered.csv')
