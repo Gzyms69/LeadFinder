@@ -7,10 +7,11 @@ This tool utilizes a custom, patched fork of the **google-maps-scraper** engine:
 [Gzyms69/google-maps-scraper](https://github.com/Gzyms69/google-maps-scraper).
 
 ### Why a Fork?
-The original repository often encounters issues due to changes in Google Maps' internal API and data structures. This fork includes critical patches to ensure reliability:
-- **Enhanced Review Extraction:** Fixes a bug where direct RPC requests lacked proper authentication cookies. It uses browser-based `fetch` via Playwright to securely retrieve up to 1000+ reviews.
-- **Robust Data Parsing:** Implements improved extraction of the `APP_INITIALIZATION_STATE`, resolving "could not convert to string" errors during place data processing.
-- **Inline Review Fallbacks:** Adds multiple fallback paths for parsing reviews, ensuring basic review data is captured even when Google returns varying data structures.
+The original repository frequently fails to capture business reviews due to race conditions and changes in Google's asynchronous loading patterns. This fork includes critical patches to ensure data integrity:
+
+- **Asynchronous Review Fix:** In the original repository, the scraper often "instantly assumed" a business had zero reviews if they didn't load within a millisecond window. This fork implements a sophisticated **waiting and retry logic** that monitors the DOM for changes and simulates user interaction (clicks/scrolling) to ensure reviews are fully materialized before extraction.
+- **RPC-to-Browser Fallback:** Google's internal RPC API often blocks direct HTTP requests that lack browser-level session cookies. This fork utilizes Playwright's `page.Eval` to perform `fetch` requests from *within* the authenticated browser context, bypassing bot detection and enabling retrieval of 1000+ reviews per lead.
+- **Robust Schema Parsing:** Resolves frequent "could not convert to string" errors by implementing a more resilient extraction of the `APP_INITIALIZATION_STATE`, ensuring core business details (phone, website, coordinates) are always captured even if the underlying HTML structure shifts.
 
 ## Prerequisites
 - **Python 3.10+**
