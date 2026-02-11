@@ -4,6 +4,7 @@ import sys
 import argparse
 import json
 import glob
+import pandas as pd
 from filter_leads import filter_leads
 from upload_to_sheets import upload_to_sheets
 
@@ -67,7 +68,12 @@ def main():
     RAW_DIR = "raw_data"
     FILTERED_CSV = "processed_data/filtered_leads.csv"
     CREDS = "config/service_account.json"
-    SHEET_ID = "14oNkRSDRvLw_p0qKSnC_rXPLlsZTDYJCW9R-Vnro6cY"
+    
+    # Spreadsheet ID from config
+    SHEET_ID = conf.get("spreadsheet_id")
+    if not SHEET_ID:
+        print("Error: 'spreadsheet_id' not found in config/query.json")
+        sys.exit(1)
     
     # 1. Scrape Logic
     if not args.skip_scrape:

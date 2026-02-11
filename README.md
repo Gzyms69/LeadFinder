@@ -2,61 +2,71 @@
 
 Automated tool to identify businesses with a digital gap on Google Maps and synchronize results directly to Google Sheets with personalized demo links.
 
+## Prerequisites
+- **Python 3.10+**
+- **Docker** (Required for the scraper engine)
+- **Google Cloud Account** (For Google Sheets API access)
+
 ## Quick Start
-1. Configure: Edit config/query.json with search terms and filters.
-2. Activate: source venv/bin/activate
-3. Run: python3 src/main.py or ./dev.sh start
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Gzyms69/LeadFinder.git
+   cd LeadFinder
+   ```
+
+2. **Run the setup script:**
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
+3. **Configure the tool:**
+   - Edit `config/query.json` and set your `spreadsheet_id`.
+   - Place your Google Service Account JSON at `config/service_account.json`.
+
+4. **Run the tool:**
+   ```bash
+   source venv/bin/activate
+   python3 src/main.py
+   ```
+
+## Google Sheets Setup
+1. Create a new Google Sheet.
+2. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+3. Create a new project and enable the **Google Sheets API** and **Google Drive API**.
+4. Create a **Service Account** under "IAM & Admin" > "Service Accounts".
+5. Generate a new **JSON Key** for the service account and save it as `config/service_account.json` in this project.
+6. **Important:** Copy the `client_email` from your JSON file and **share your Google Sheet** with that email (Editor permissions).
+7. Copy the Spreadsheet ID from the URL (the part between `/d/` and `/edit`) and paste it into `config/query.json`.
 
 ## Features
-- Automated Filtering: Excludes businesses that already possess a website.
-- Newness Proxy: Filters by review count to identify recently established businesses.
-- City Extraction: Automatically identifies the municipality for targeted outreach.
-- Domain Availability Check: Verifies if .pl and .com domains matching the business name are available.
-- Template Matching: Automatically categorizes businesses into industry-specific website templates using keyword analysis of search terms and business names.
-- Magic Link Generation: Creates personalized URLs for prospective clients, allowing for instant generation of custom demo websites.
-- Digital Score: Ranks leads based on their online presence (0-3 scale).
-- Consolidated Contact Profiles: Merges phone numbers, email addresses, and social media links.
-- Geolocation Search: Performs targeted searches within a specified radius of decimal coordinates.
-- Table Synchronization: Appends data to Google Sheets with automated table formatting and active filters.
+- **Automated Filtering:** Excludes businesses that already possess a website.
+- **Newness Proxy:** Filters by review count (e.g., <= 5) to identify recently established businesses.
+- **City Extraction:** Automatically identifies the municipality for targeted outreach.
+- **Domain Availability Check:** Verifies if `.pl` and `.com` domains matching the business name are available.
+- **Template Matching:** Categorizes businesses into industry-specific templates using keyword analysis.
+- **Magic Link Generation:** Creates personalized URLs for prospective clients using the Katalog Marketplace.
+- **Digital Score:** Ranks leads based on their online presence (0-3 scale).
+- **Consolidated Contact Profiles:** Merges phone numbers, emails, and social media links.
+- **Geolocation Search:** Performs targeted searches within a specified radius of coordinates.
+- **Table Synchronization:** Appends data to Google Sheets with automated formatting.
 
 ## Configuration (config/query.json)
-- mode: "geo" for radius searches or "text" for direct queries.
-- lat, lon: Decimal coordinates for the search center.
-- radius: Search radius in meters.
-- keywords: Array of search terms.
-- depth: Result pagination depth.
-- email_scrape: Enable/disable website contact crawling.
-
-## Dynamic Sales Architecture Integration
-The tool integrates with the Katalog Marketplace to generate personalized demo links.
-
-### Matching Logic
-The system prioritizes the search keyword to determine the industry category (e.g., searching for "mechanik" automatically assigns the "warsztat-pro" template). If the keyword is generic, it analyzes the business name against a comprehensive registry of Polish and English industry terms.
-
-### Supported Templates
-- warsztat-pro: Automotive services, detailing, and repair.
-- bistro-modern: Restaurants, cafes, and gastronomy.
-- helios-advise: Legal, financial, and consulting services.
-- cyber-security: IT services, computer repair, and security.
-- landing-aplikacji: Software and mobile applications.
-- portfolio-osobista: Freelancers, artists, and personal brands.
-
-## Spreadsheet Column Definitions
-- Column A (Business Name): Name as listed on Google Maps.
-- Column B (City): Identified municipality.
-- Column C (Address): Physical location.
-- Column D (Contact Profile): Consolidated phone, email, and social links.
-- Column E (Domain .PL): Availability of matching .pl domain.
-- Column F (Domain .COM): Availability of matching .com domain.
-- Column G (Template Slug): Assigned industry template identifier.
-- Column H (Magic Link): Personalized demo website URL.
-- Column I (Digital Score): Online presence ranking.
-- Column J (Reviews): Total user review count (Patched for accuracy).
-- Column K (Rating): Average star rating.
-- Column L (Maps URL): Direct link to the business profile.
+- `mode`: "geo" for radius searches or "text" for direct queries.
+- `lat`, `lon`: Decimal coordinates for the search center.
+- `radius`: Search radius in meters (e.g., 5000 for 5km).
+- `keywords`: Array of search terms (e.g., ["warsztat", "fryzjer"]).
+- `max_reviews`: Threshold for the "newness" filter.
+- `depth`: Result pagination depth (1 scroll ≈ 20-40 results).
+- `email_scrape`: Enable/disable website contact crawling.
+- `spreadsheet_id`: The ID of your target Google Sheet.
 
 ## Project Structure
-- config/: API credentials and search parameters.
-- src/: Core Python logic and template matching engine.
-- raw_data/: Archive of scraper outputs.
-- processed_data/: Filtered leads ready for outreach.
+- `config/`: Configuration templates and API credentials (ignored by git).
+- `src/`: Core logic (Scraping, Filtering, Uploading).
+- `raw_data/`: Direct outputs from the scraper.
+- `processed_data/`: Cleaned and filtered CSVs.
+- `setup.sh`: Automated environment setup script.
+
+## Disclaimer
+This tool is intended for personal lead generation and educational purposes. Ensure compliance with Google's Terms of Service and local data privacy regulations.

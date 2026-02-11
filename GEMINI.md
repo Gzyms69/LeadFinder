@@ -4,7 +4,7 @@
 Automated Google Maps lead generation tool focusing on "New & Website-less" businesses.
 
 - **GitHub Repository:** https://github.com/Gzyms69/LeadFinder
-- **Target Spreadsheet:** https://docs.google.com/spreadsheets/d/14oNkRSDRvLw_p0qKSnC_rXPLlsZTDYJCW9R-Vnro6cY/edit
+- **Target Spreadsheet:** [Configured in config/query.json]
 
 ### Primary Filters
 - **No Website:** `website` field is null or empty.

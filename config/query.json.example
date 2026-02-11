@@ -1,0 +1,18 @@
+{
+    "_mode_note": "mode can be 'geo' or 'text'. 'geo' uses lat/lon/radius. 'text' uses keywords as direct search terms.",
+    "mode": "geo",
+    "_geo_note": "lat and lon are decimal coordinates. radius is in METERS (e.g., 5000 = 5km).",
+    "lat": "52.2297",
+    "lon": "21.0122",
+    "radius": 5000,
+    "keywords": [
+        "warsztat samochodowy",
+        "mechanik"
+    ],
+    "max_reviews": 5,
+    "_depth_note": "depth is the number of scrolls. 1 = ~20-40 results, 5 = ~100-200 results.",
+    "depth": 1,
+    "language": "pl",
+    "email_scrape": true,
+    "spreadsheet_id": "YOUR_SPREADSHEET_ID_HERE"
+}

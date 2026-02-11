@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # Configuration
     CSV_FILE = 'processed_data/filtered_leads.csv'
     CREDS_FILE = 'config/service_account.json'
-    SPREADSHEET_ID = '14oNkRSDRvLw_p0qKSnC_rXPLlsZTDYJCW9R-Vnro6cY'
+    SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'  # Use config/query.json for main execution
 
     # Allow command line overrides
     if len(sys.argv) > 1:
