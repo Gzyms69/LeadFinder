@@ -2,6 +2,16 @@
 
 Automated tool to identify businesses with a digital gap on Google Maps and synchronize results directly to Google Sheets with personalized demo links.
 
+## Technical Foundation
+This tool utilizes a custom, patched fork of the **google-maps-scraper** engine:
+[Gzyms69/google-maps-scraper](https://github.com/Gzyms69/google-maps-scraper).
+
+### Why a Fork?
+The original repository often encounters issues due to changes in Google Maps' internal API and data structures. This fork includes critical patches to ensure reliability:
+- **Enhanced Review Extraction:** Fixes a bug where direct RPC requests lacked proper authentication cookies. It uses browser-based `fetch` via Playwright to securely retrieve up to 1000+ reviews.
+- **Robust Data Parsing:** Implements improved extraction of the `APP_INITIALIZATION_STATE`, resolving "could not convert to string" errors during place data processing.
+- **Inline Review Fallbacks:** Adds multiple fallback paths for parsing reviews, ensuring basic review data is captured even when Google returns varying data structures.
+
 ## Prerequisites
 - **Python 3.10+**
 - **Docker** (Required for the scraper engine)
