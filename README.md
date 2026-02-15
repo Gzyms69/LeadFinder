@@ -1,6 +1,6 @@
 # LeadFinder: Google Maps Lead Generator
 
-Automated tool to identify businesses with a digital gap on Google Maps and synchronize results directly to Google Sheets with personalized demo links.
+Automated tool to identify businesses with a digital gap on Google Maps and synchronize results directly to Google Sheets with personalized demo links. Check https://github.com/Gzyms69/katalog for magic link generator engine and template catalog.
 
 ## Technical Foundation
 This tool utilizes a custom, patched fork of the **google-maps-scraper** engine:
