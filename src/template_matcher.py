@@ -1,8 +1,8 @@
 import urllib.parse
 import re
 
-# Base URL for the marketplace
-BASE_URL = "http://localhost:3000"
+# Base URL for the marketplace - Updated to V2 Production
+BASE_URL = "https://katalog.czerwinskidawid.pl"
 
 # Template Registry
 # Maps template slugs to a list of keywords (lowercase).
@@ -88,6 +88,17 @@ TEMPLATE_REGISTRY = {
         "solutions", "digital", "technology", "tech", "innovation", "ai", "artificial intelligence",
         "bot", "automation", "cloud", "data", "analytics", "tools", "online", "internet"
     ],
+    "agencja-kreatywna": [
+        # Polish
+        "marketing", "reklama", "reklamowa", "agencja", "kreatywna", "neon", "media", "group", 
+        "design", "designu", "branding", "brandingowa", "social media", "content", "seo", 
+        "sem", "ads", "kampanie", "kampania", "grafika", "graficzne", "web design", 
+        "tworzenie stron", "strony www", "identyfikacja wizualna", "logo", "logotyp",
+        # English
+        "marketing", "advertising", "agency", "creative", "media", "design", "branding",
+        "social media", "content", "seo", "sem", "ads", "campaign", "graphics", "web design",
+        "web development", "websites", "identity", "logo"
+    ],
     "portfolio-osobista": [
         # Polish
         "fotograf", "fotografia", "zdjęcia", "zdjecia", "sesje", "grafik", "grafika", "design",
@@ -117,49 +128,54 @@ def clean_text(text):
     text = re.sub(r'[^a-z0-9\s]', '', text)
     return text
 
-def get_best_template(business_name, city, phone, search_keyword=None):
+def get_best_template(business_name, city, phone, address, search_keyword=None, forced_template=None):
     """
     Analyzes search keyword and business name to find the best template match.
-    Prioritizes search_keyword as it is more robust.
+    Prioritizes forced_template if provided.
     Returns: (template_slug, magic_link)
     """
-    normalized_name = clean_text(business_name)
-    normalized_kw = clean_text(search_keyword) if search_keyword else ""
-    
-    best_slug = "portfolio-osobista" # Default fallback
-    max_matches = 0
+    # 0. Forced Template Strategy
+    if forced_template and forced_template.strip():
+        best_slug = forced_template.strip()
+    else:
+        # Intelligent Selection Logic
+        normalized_name = clean_text(business_name)
+        normalized_kw = clean_text(search_keyword) if search_keyword else ""
+        
+        best_slug = "agencja-kreatywna" # Default fallback
+        max_matches = 0
 
-    # 1. Primary Strategy: Match against Search Keyword
-    if normalized_kw:
-        for slug, keywords in TEMPLATE_REGISTRY.items():
-            for kw in keywords:
-                if kw in normalized_kw:
-                    # If the search keyword contains a registry keyword, we have a high-confidence match
-                    best_slug = slug
-                    max_matches = 100 # High confidence
+        # 1. Primary Strategy: Match against Search Keyword
+        if normalized_kw:
+            for slug, keywords in TEMPLATE_REGISTRY.items():
+                for kw in keywords:
+                    if kw in normalized_kw:
+                        best_slug = slug
+                        max_matches = 100 # High confidence
+                        break
+                if max_matches == 100:
                     break
-            if max_matches == 100:
-                break
 
-    # 2. Secondary Strategy: Match against Business Name (Fallback or enrichment)
-    if max_matches < 100:
-        for slug, keywords in TEMPLATE_REGISTRY.items():
-            matches = 0
-            for keyword in keywords:
-                if keyword in normalized_name:
-                    matches += 1
-                    if f" {keyword} " in f" {normalized_name} ":
-                        matches += 2
-            
-            if matches > max_matches:
-                max_matches = matches
-                best_slug = slug
+        # 2. Secondary Strategy: Match against Business Name
+        if max_matches < 100:
+            for slug, keywords in TEMPLATE_REGISTRY.items():
+                matches = 0
+                for keyword in keywords:
+                    if keyword in normalized_name:
+                        matches += 1
+                        if f" {keyword} " in f" {normalized_name} ":
+                            matches += 2
+                
+                if matches > max_matches:
+                    max_matches = matches
+                    best_slug = slug
 
-    # Construct Magic Link
-    # https://katalog.vercel.app/templates/[slug]?name=...
+    # Construct Magic Link (DSA V2 Format)
+    # https://katalog.czerwinskidawid.pl/templates/[slug]?name=...&city=...&address=...&phone=...
     params = {
         "name": business_name,
         "city": city if city else "",
+        "address": address if address else "",
         "phone": phone if phone else ""
     }
     

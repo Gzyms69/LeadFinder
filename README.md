@@ -55,8 +55,8 @@ The original repository frequently fails to capture business reviews due to race
 - **Newness Proxy:** Filters by review count (e.g., <= 5) to identify recently established businesses.
 - **City Extraction:** Automatically identifies the municipality for targeted outreach.
 - **Domain Availability Check:** Verifies if `.pl` and `.com` domains matching the business name are available.
-- **Template Matching:** Categorizes businesses into industry-specific templates using keyword analysis.
-- **Magic Link Generation:** Creates personalized URLs for prospective clients using the Katalog Marketplace.
+- **Intelligent Template Matching:** Automatically categorizes businesses into industry-specific templates using keyword analysis or allows for manual override via configuration.
+- **DSA V2 Magic Link Generation:** Creates personalized URLs for prospective clients using the Katalog Marketplace, injecting `name`, `city`, `address`, and `phone` for instant tailored demos.
 - **Digital Score:** Ranks leads based on their online presence (0-3 scale).
 - **Consolidated Contact Profiles:** Merges phone numbers, emails, and social media links.
 - **Geolocation Search:** Performs targeted searches within a specified radius of coordinates.
@@ -71,6 +71,16 @@ The original repository frequently fails to capture business reviews due to race
 - `depth`: Result pagination depth (1 scroll ≈ 20-40 results).
 - `email_scrape`: Enable/disable website contact crawling.
 - `spreadsheet_id`: The ID of your target Google Sheet.
+- `template`: (Optional) Force a specific template slug for all results (e.g., "warsztat-pro"). Leave empty for auto-matching.
+
+### Supported Templates
+- `warsztat-pro`: Automotive services and repair.
+- `bistro-modern`: Restaurants, cafes, and gastronomy.
+- `agencja-kreatywna`: Marketing, design, and advertising agencies.
+- `helios-advise`: Legal, financial, and consulting services.
+- `cyber-security`: IT and computer security services.
+- `landing-aplikacji`: SaaS and mobile application landing pages.
+- `portfolio-osobista`: Freelancers, artists, and personal brands.
 
 ## Project Structure
 - `config/`: Configuration templates and API credentials (ignored by git).

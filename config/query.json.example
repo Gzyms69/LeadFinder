@@ -14,5 +14,6 @@
     "depth": 1,
     "language": "pl",
     "email_scrape": true,
-    "spreadsheet_id": "YOUR_SPREADSHEET_ID_HERE"
+    "spreadsheet_id": "YOUR_SPREADSHEET_ID_HERE",
+    "template": ""
 }

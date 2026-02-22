@@ -42,15 +42,11 @@ def check_domain_availability(domain):
     if not domain:
         return "N/A"
     try:
-        # Some WHOIS servers are very sensitive. 
-        # We add a small sleep before each check in the main loop if needed.
         w = whois.whois(domain)
-        # If domain has no expiration date or registrar, it might be available
         if not w.domain_name:
             return "Available"
         return "Registered"
     except Exception as e:
-        # python-whois raises an exception if domain is not found (which means it's available)
         if "No match for" in str(e) or "NOT FOUND" in str(e) or "No found" in str(e):
             return "Available"
         return "Check Manually"
@@ -70,10 +66,6 @@ def extract_city(address_json):
 def calculate_digital_score(row):
     """
     Calculates a 'Digital Presence Score' (0-3).
-    0 = Ghost (No phone, no web, no social)
-    1 = Minimal (Phone only)
-    2 = Partial (Socials but no Web)
-    3 = Established (Website)
     """
     score = 0
     if row.get('Phone') and str(row.get('Phone')).strip():
@@ -111,7 +103,7 @@ def build_contact_profile(row):
             
     return " | ".join(parts)
 
-def filter_leads(input_files, output_file, max_reviews=5):
+def filter_leads(input_files, output_file, max_reviews=5, forced_template=None):
     """
     Filters leads from multiple CSVs and checks domain availability.
     """
@@ -177,10 +169,17 @@ def filter_leads(input_files, output_file, max_reviews=5):
             domain_pl.append("N/A")
             domain_com.append("N/A")
             
-        # Template Matching
-        # Prioritize the keyword used for search, with business name as secondary context
+        # Template Matching (Updated for DSA V2)
         search_kw = row.get('search_keyword', '')
-        slug, link = get_best_template(row['title'], row['City'], row['Phone'], search_keyword=search_kw)
+        # Pass 'address' and 'forced_template'
+        slug, link = get_best_template(
+            business_name=row['title'], 
+            city=row['City'], 
+            phone=row['Phone'],
+            address=row.get('address', ''), 
+            search_keyword=search_kw,
+            forced_template=forced_template
+        )
         template_slugs.append(slug)
         magic_links.append(link)
 

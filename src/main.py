@@ -119,9 +119,15 @@ def main():
         
     print(f"--- Merging {len(all_files)} raw data files ---")
     
-    # 3. Filter
+    # 3. Filter (Updated for DSA V2 & Forced Template)
     print(f"--- Filtering Leads (Max Reviews: {conf.get('max_reviews', 5)}) ---")
-    filter_leads(all_files, FILTERED_CSV, conf.get('max_reviews', 5))
+    forced_template = conf.get("template")
+    filter_leads(
+        input_files=all_files, 
+        output_file=FILTERED_CSV, 
+        max_reviews=conf.get('max_reviews', 5),
+        forced_template=forced_template
+    )
 
     # 4. Upload
     print("--- Uploading to Google Sheets ---")
